@@ -5,115 +5,96 @@ GO
 USE eBooks;
 GO
 
--- Table for roles
 CREATE TABLE Roles (
     RoleId INT PRIMARY KEY IDENTITY(1,1),
-    Name NVARCHAR(50) -- 'user', 'publisher', 'admin'
+    Name NVARCHAR(50) UNIQUE NOT NULL
 );
 GO
 
--- Table for users
 CREATE TABLE Users (
     UserId INT PRIMARY KEY IDENTITY(1,1),
-    FirstName NVARCHAR(100),
-    LastName NVARCHAR(100),
-    UserName NVARCHAR(100),
-    Email NVARCHAR(100) UNIQUE,
-    PasswordHash NVARCHAR(255),
-    RoleId INT FOREIGN KEY REFERENCES Roles(RoleId),
-    RegistrationDate DATETIME DEFAULT GETDATE()
+    FirstName NVARCHAR(100) NOT NULL,
+    LastName NVARCHAR(100) NOT NULL,
+    UserName NVARCHAR(100) NOT NULL,
+    Email NVARCHAR(100) UNIQUE NOT NULL,
+    PasswordHash NVARCHAR(255) NOT NULL,
+    RoleId INT FOREIGN KEY REFERENCES Roles(RoleId) NOT NULL,
+    RegistrationDate DATETIME DEFAULT GETDATE() NOT NULL
 );
 GO
 
--- Table for genres
 CREATE TABLE Genres (
     GenreId INT PRIMARY KEY IDENTITY(1,1),
-    GenreName NVARCHAR(100)
+    Name NVARCHAR(100) NOT NULL
 );
 GO
 
--- Table for books
 CREATE TABLE Books (
     BookId INT PRIMARY KEY IDENTITY(1,1),
-    Title NVARCHAR(255),
-    Description NVARCHAR(MAX),
-    GenreId INT FOREIGN KEY REFERENCES Genres(GenreId),
-    Price DECIMAL(10,2),
-    TotalPages INT,
-    PDFPath NVARCHAR(255),
-    PublisherId INT FOREIGN KEY REFERENCES Users(UserId),
-    AddedDate DATETIME DEFAULT GETDATE()
+    Title NVARCHAR(255) NOT NULL,
+    Description NVARCHAR(MAX) NULL,
+    GenreId INT FOREIGN KEY REFERENCES Genres(GenreId) NULL,
+    Price DECIMAL(10,2) NOT NULL,
+    TotalPages INT NOT NULL,
+    PDFPath NVARCHAR(255) NULL,
+    PublisherId INT FOREIGN KEY REFERENCES Users(UserId) NOT NULL,
+    AddedDate DATETIME DEFAULT GETDATE() NOT NULL
 );
 GO
 
--- Table for authTokens
 CREATE TABLE AuthTokens (
     AuthTokenId INT PRIMARY KEY IDENTITY(1,1),
-    UserId INT FOREIGN KEY REFERENCES Users(UserId),
-    Token NVARCHAR(255),
-    LoggedInDate DATETIME DEFAULT GETDATE(),
-    ExpirationDate DATETIME
+    UserId INT FOREIGN KEY REFERENCES Users(UserId) NOT NULL,
+    Token NVARCHAR(255) UNIQUE NOT NULL,
+    LoggedInDate DATETIME DEFAULT GETDATE() NOT NULL,
+    ExpirationDate DATETIME NOT NULL,
+    LoggedOutDate DATETIME DEFAULT GETDATE() NULL
 );
 GO
 
--- New table for storing multiple images for a book
 CREATE TABLE BookImages (
     ImageId INT PRIMARY KEY IDENTITY(1,1),
-    BookId INT FOREIGN KEY REFERENCES Books(BookId),
-    ImagePath NVARCHAR(255), -- Path to the image file
-    AddedDate DATETIME DEFAULT GETDATE()
+    BookId INT FOREIGN KEY REFERENCES Books(BookId) NOT NULL,
+    ImagePath NVARCHAR(255) NOT NULL,
+    AddedDate DATETIME DEFAULT GETDATE() NOT NULL
 );
 GO
 
--- Table for purchases
 CREATE TABLE Purchases (
-    PurchaseId INT PRIMARY KEY IDENTITY(1,1),
-    UserId INT FOREIGN KEY REFERENCES Users(UserId),
-    BookId INT FOREIGN KEY REFERENCES Books(BookId),
-    PurchaseDate DATETIME DEFAULT GETDATE(),
-    TotalPrice DECIMAL(10,2)
+    UserId INT FOREIGN KEY REFERENCES Users(UserId) NOT NULL,
+    BookId INT FOREIGN KEY REFERENCES Books(BookId) NOT NULL,
+    PurchaseDate DATETIME DEFAULT GETDATE() NOT NULL,
+    TotalPrice DECIMAL(10,2) NOT NULL,
+	PRIMARY KEY (UserId, BookId)
 );
 GO
 
--- Table for reviews
 CREATE TABLE Reviews (
-    ReviewId INT PRIMARY KEY IDENTITY(1,1),
-    BookId INT FOREIGN KEY REFERENCES Books(BookId),
-    UserId INT FOREIGN KEY REFERENCES Users(UserId),
-    Rating INT CHECK (Rating BETWEEN 1 AND 5),
-    Comment NVARCHAR(MAX),
-    ReviewDate DATETIME DEFAULT GETDATE()
+    BookId INT FOREIGN KEY REFERENCES Books(BookId) NOT NULL,
+    UserId INT FOREIGN KEY REFERENCES Users(UserId) NOT NULL,
+    Rating INT CHECK (Rating BETWEEN 1 AND 5) NOT NULL,
+    Comment NVARCHAR(MAX) NULL,
+    ReviewDate DATETIME DEFAULT GETDATE() NOT NULL,
+	PRIMARY KEY (BookId, UserId)
 );
 GO
 
--- Table for wishlists
 CREATE TABLE Wishlists (
-    WishlistId INT PRIMARY KEY IDENTITY(1,1),
-    UserId INT FOREIGN KEY REFERENCES Users(UserId),
-    BookId INT FOREIGN KEY REFERENCES Books(BookId),
-    AddedDate DATETIME DEFAULT GETDATE()
+    UserId INT FOREIGN KEY REFERENCES Users(UserId) NOT NULL,
+    BookId INT FOREIGN KEY REFERENCES Books(BookId) NOT NULL,
+    AddedDate DATETIME DEFAULT GETDATE() NOT NULL,
+	PRIMARY KEY (UserId, BookId)
 );
 GO
 
--- Table for cart
-CREATE TABLE Cart (
-    CartId INT PRIMARY KEY IDENTITY(1,1),
-    UserId INT FOREIGN KEY REFERENCES Users(UserId),
-    BookId INT FOREIGN KEY REFERENCES Books(BookId),
-    AddedDate DATETIME DEFAULT GETDATE()
-);
-GO
-
--- Table for authors
 CREATE TABLE Authors (
     AuthorId INT PRIMARY KEY IDENTITY(1,1),
-    FirstName NVARCHAR(100),
-    LastName NVARCHAR(100),
-    Biography NVARCHAR(MAX)
+    FirstName NVARCHAR(100) NOT NULL,
+    LastName NVARCHAR(100) NOT NULL,
+    Biography NVARCHAR(MAX) NULL
 );
 GO
 
--- Table for book authors (many-to-many relationship)
 CREATE TABLE BookAuthors (
     BookId INT FOREIGN KEY REFERENCES Books(BookId),
     AuthorId INT FOREIGN KEY REFERENCES Authors(AuthorId),
@@ -121,57 +102,134 @@ CREATE TABLE BookAuthors (
 );
 GO
 
--- Table for access rights (age restrictions)
 CREATE TABLE AccessRights (
     AccessRightId INT PRIMARY KEY IDENTITY(1,1),
-    BookId INT FOREIGN KEY REFERENCES Books(BookId),
-    MinimumAge INT
+    BookId INT FOREIGN KEY REFERENCES Books(BookId) NOT NULL,
+    MinimumAge INT NOT NULL
 );
 GO
 
--- Table for reading progress
 CREATE TABLE ReadingProgress (
-    ProgressId INT PRIMARY KEY IDENTITY(1,1),
-    UserId INT FOREIGN KEY REFERENCES Users(UserId),
-    BookId INT FOREIGN KEY REFERENCES Books(BookId),
-    CurrentPage INT,
-    LastReadDate DATETIME DEFAULT GETDATE()
+    UserId INT FOREIGN KEY REFERENCES Users(UserId) NOT NULL,
+    BookId INT FOREIGN KEY REFERENCES Books(BookId) NOT NULL,
+    CurrentPage INT NOT NULL,
+	PRIMARY KEY (UserId, BookId)
 );
 GO
 
--- Table for favorites
 CREATE TABLE Favorites (
-    FavoriteId INT PRIMARY KEY IDENTITY(1,1),
-    UserId INT FOREIGN KEY REFERENCES Users(UserId),
-    BookId INT FOREIGN KEY REFERENCES Books(BookId),
-    AddedDate DATETIME DEFAULT GETDATE()
+    UserId INT FOREIGN KEY REFERENCES Users(UserId) NOT NULL,
+    BookId INT FOREIGN KEY REFERENCES Books(BookId) NOT NULL,
+    AddedDate DATETIME DEFAULT GETDATE() NOT NULL,
+	PRIMARY KEY (UserId, BookId)
 );
 GO
 
--- Table for publisher verification
 CREATE TABLE PublisherVerification (
     VerificationId INT PRIMARY KEY IDENTITY(1,1),
-    PublisherId INT FOREIGN KEY REFERENCES Users(UserId),
-    Verified BIT DEFAULT 0,
-    VerificationDate DATETIME,
-    AdminId INT FOREIGN KEY REFERENCES Users(UserId)
+    PublisherId INT FOREIGN KEY REFERENCES Users(UserId) UNIQUE NOT NULL,
+    Verified BIT DEFAULT 0 NOT NULL,
+    VerificationDate DATETIME NOT NULL,
+    AdminId INT FOREIGN KEY REFERENCES Users(UserId) NOT NULL
 );
 GO
 
--- Table for following publishers
 CREATE TABLE PublisherFollows (
-    FollowId INT PRIMARY KEY IDENTITY(1,1),
-    UserId INT FOREIGN KEY REFERENCES Users(UserId),
-    PublisherId INT FOREIGN KEY REFERENCES Users(UserId), -- Publisher is also a user
-    FollowDate DATETIME DEFAULT GETDATE()
+    UserId INT FOREIGN KEY REFERENCES Users(UserId) NOT NULL,
+    PublisherId INT FOREIGN KEY REFERENCES Users(UserId) NOT NULL,
+    FollowDate DATETIME DEFAULT GETDATE() NOT NULL,
+	PRIMARY KEY (UserId, PublisherId)
 );
 GO
 
--- Table for following books
 CREATE TABLE BookFollows (
-    FollowId INT PRIMARY KEY IDENTITY(1,1),
-    UserId INT FOREIGN KEY REFERENCES Users(UserId),
-    BookId INT FOREIGN KEY REFERENCES Books(BookId),
-    FollowDate DATETIME DEFAULT GETDATE()
+    UserId INT FOREIGN KEY REFERENCES Users(UserId) NOT NULL,
+    BookId INT FOREIGN KEY REFERENCES Books(BookId) NOT NULL,
+    FollowDate DATETIME DEFAULT GETDATE() NOT NULL,
+	PRIMARY KEY (UserId, BookId)
 );
+GO
+
+CREATE TABLE Notifications (
+    NotificationId INT PRIMARY KEY IDENTITY(1,1),
+    UserId INT FOREIGN KEY REFERENCES Users(UserId) NOT NULL,
+    Message NVARCHAR(MAX) NOT NULL,
+    IsRead BIT DEFAULT 0 NOT NULL,
+    CreatedDate DATETIME DEFAULT GETDATE() NOT NULL,
+    PublisherId INT FOREIGN KEY REFERENCES Users(UserId) NULL,
+    BookId INT FOREIGN KEY REFERENCES Books(BookId) NULL
+);
+GO
+
+CREATE TABLE Languages (
+    LanguageId INT PRIMARY KEY IDENTITY(1,1),
+    Name NVARCHAR(100) UNIQUE NOT NULL,
+    Abbreviation NVARCHAR(10) NOT NULL
+);
+GO
+
+
+INSERT INTO Roles (Name) 
+VALUES 
+    ('user'),
+    ('publisher'),
+    ('admin');
+GO
+
+INSERT INTO Genres (Name) 
+VALUES 
+    ('Science Fiction'),
+    ('Biography'),
+    ('History'),
+    ('Romance'),
+    ('Thriller'),
+    ('Horror'),
+    ('Self-help'),
+    ('Philosophy'),
+    ('Psychology'),
+    ('Adventure'),
+    ('Children'),
+    ('Poetry'),
+    ('Drama'),
+    ('Cooking'),
+    ('Travel'),
+    ('Health & Fitness'),
+    ('Religion'),
+    ('Business'),
+    ('Education'),
+    ('Art'),
+    ('Technology'),
+    ('Humor'),
+    ('Science'),
+    ('Politics'),
+    ('Sports');
+GO
+
+INSERT INTO Languages (Name, Abbreviation) 
+VALUES 
+    ('English', 'eng'),
+    ('Bosnian', 'ba'),
+    ('German', 'de'),
+    ('French', 'fr'),
+    ('Spanish', 'es'),
+    ('Italian', 'it'),
+    ('Chinese', 'zh'),
+    ('Japanese', 'ja'),
+    ('Korean', 'ko'),
+    ('Russian', 'ru'),
+    ('Arabic', 'ar'),
+    ('Portuguese', 'pt'),
+    ('Hindi', 'hi'),
+    ('Dutch', 'nl'),
+    ('Swedish', 'sv'),
+    ('Norwegian', 'no'),
+    ('Finnish', 'fi'),
+    ('Danish', 'da'),
+    ('Greek', 'el'),
+    ('Turkish', 'tr'),
+    ('Polish', 'pl'),
+    ('Czech', 'cs'),
+    ('Hungarian', 'hu'),
+    ('Romanian', 'ro'),
+    ('Hebrew', 'he');
 GO

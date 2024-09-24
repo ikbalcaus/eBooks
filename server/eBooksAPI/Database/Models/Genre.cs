@@ -11,7 +11,7 @@ namespace eBooksAPI.Database.Models
         }
 
         public int GenreId { get; set; }
-        public string? GenreName { get; set; }
+        public string Name { get; set; } = null!;
 
         public virtual ICollection<Book> Books { get; set; }
     }

@@ -1,25 +1,32 @@
-﻿using System.Security.Cryptography;
+﻿using eBooksAPI.Database;
 using System.Text;
 
-namespace BaseCureAPI.Helpers
+namespace eBooksAPI.Helpers
 {
     public class TokenGenerator
     {
-        public static string GenerateToken(int size = 20)
+        private static readonly string charSet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        private static readonly Random random = new Random();
+
+        public static string GenerateUniqueToken(eBooksContext db, int length = 20)
         {
-            var charSet = "abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-            var chars = charSet.ToCharArray();
-            var data = new byte[1];
-            var crypto = new RNGCryptoServiceProvider();
-            crypto.GetNonZeroBytes(data);
-            data = new byte[size];
-            crypto.GetNonZeroBytes(data);
-            var result = new StringBuilder(size);
-            foreach (var i in data)
+            string token = GenerateToken(length);
+            while (db.AuthTokens.Any(x => x.Token == token))
             {
-                result.Append(chars[i % (chars.Length)]);
+                token = GenerateToken(length);
             }
-            return result.ToString();
+            return token;
+        }
+
+        private static string GenerateToken(int length)
+        {
+            var token = new StringBuilder(length);
+            for (int i = 0; i < length; i++)
+            {
+                int index = random.Next(charSet.Length);
+                token.Append(charSet[index]);
+            }
+            return token.ToString();
         }
     }
 }

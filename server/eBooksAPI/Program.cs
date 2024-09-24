@@ -4,7 +4,7 @@ using eBooksAPI.Database;
 var config = new ConfigurationBuilder().AddJsonFile("appsettings.json", false).Build();
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddDbContext<eBooksContext>(options =>options.UseSqlServer(config.GetConnectionString("Database")));
+builder.Services.AddDbContext<eBooksContext>(options => options.UseSqlServer("Name=Database"));
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

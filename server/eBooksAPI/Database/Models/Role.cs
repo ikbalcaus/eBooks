@@ -11,7 +11,7 @@ namespace eBooksAPI.Database.Models
         }
 
         public int RoleId { get; set; }
-        public string? Name { get; set; }
+        public string Name { get; set; } = null!;
 
         public virtual ICollection<User> Users { get; set; }
     }
